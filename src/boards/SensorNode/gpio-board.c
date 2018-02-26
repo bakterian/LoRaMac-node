@@ -50,10 +50,10 @@ void GpioMcuInit( Gpio_t *obj, PinNames pin, PinModes mode, PinConfigs config, P
         obj->port = GPIOD;
         __HAL_RCC_GPIOD_CLK_ENABLE( );
     }
-    else
+
+    if(mode == PIN_ALTERNATE_FCT)
     {
-        obj->port = GPIOH;
-        __HAL_RCC_GPIOH_CLK_ENABLE( );
+    	__HAL_RCC_AFIO_CLK_ENABLE();
     }
 
     GPIO_InitStructure.Pin =  obj->pinIndex ;
@@ -78,7 +78,6 @@ void GpioMcuInit( Gpio_t *obj, PinNames pin, PinModes mode, PinConfigs config, P
         {
             GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
         }
-        GPIO_InitStructure.Alternate = value;
     }
     else // mode output
     {

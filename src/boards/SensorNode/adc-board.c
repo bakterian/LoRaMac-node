@@ -34,17 +34,18 @@ void AdcMcuInit( Adc_t *obj, PinNames adcInput )
 void AdcMcuConfig( void )
 {
     // Configure ADC
-    AdcHandle.Init.Resolution            = ADC_RESOLUTION_12B;
     AdcHandle.Init.DataAlign             = ADC_DATAALIGN_RIGHT;
     AdcHandle.Init.ContinuousConvMode    = DISABLE;
     AdcHandle.Init.DiscontinuousConvMode = DISABLE;
-    AdcHandle.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;
-    AdcHandle.Init.ExternalTrigConv      = ADC_EXTERNALTRIGCONV_T6_TRGO;
-    AdcHandle.Init.DMAContinuousRequests = DISABLE;
-    AdcHandle.Init.EOCSelection          = ADC_EOC_SINGLE_CONV;
     AdcHandle.Init.NbrOfConversion       = 1;
-    AdcHandle.Init.LowPowerAutoWait      = DISABLE;
-    AdcHandle.Init.LowPowerAutoPowerOff  = DISABLE;
+
+    //Those settings are not available on STF103XB:
+	//    AdcHandle.Init.ExternalTrigConv      = ADC_EXTERNALTRIGCONV_T6_TRGO;
+	//    AdcHandle.Init.DMAContinuousRequests = DISABLE;
+	//    AdcHandle.Init.EOCSelection          = ADC_EOC_SINGLE_CONV;
+	//    AdcHandle.Init.LowPowerAutoWait      = DISABLE;
+	//    AdcHandle.Init.LowPowerAutoPowerOff  = DISABLE;
+
     HAL_ADC_Init( &AdcHandle );
 }
 
@@ -65,7 +66,8 @@ uint16_t AdcMcuReadChannel( Adc_t *obj, uint32_t channel )
 
     adcConf.Channel = channel;
     adcConf.Rank = ADC_REGULAR_RANK_1;
-    adcConf.SamplingTime = ADC_SAMPLETIME_192CYCLES;
+    //adcConf.SamplingTime = ADC_SAMPLETIME_192CYCLES;  The ADC_SAMPLETIME_192CYCLES is not supported on STF103XB
+    adcConf.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
 
     HAL_ADC_ConfigChannel( &AdcHandle, &adcConf );
 

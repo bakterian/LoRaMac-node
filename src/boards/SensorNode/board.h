@@ -20,8 +20,10 @@ Maintainer: Miguel Luis and Gregory Cristian
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
-#include "stm32l1xx.h"
-#include "stm32l1xx_hal.h"
+#include "stm32f1xx.h"
+#include "stm32f1xx_hal.h"
+//#include "stm32l1xx.h"
+//#include "stm32l1xx_hal.h"
 #include "utilities.h"
 #include "timer.h"
 #include "delay.h"
@@ -65,80 +67,81 @@ Maintainer: Miguel Luis and Gregory Cristian
 /*!
  * Board IO Extender pins definitions
  */
-#define IRQ_MPL3115                                 IOE_0
-#define IRQ_MAG3110                                 IOE_1
-#define GPS_POWER_ON                                IOE_2
-#define RADIO_PUSH_BUTTON                           IOE_3
-#define BOARD_POWER_DOWN                            IOE_4
-#define SPARE_IO_EXT_5                              IOE_5
-#define SPARE_IO_EXT_6                              IOE_6
-#define SPARE_IO_EXT_7                              IOE_7
-#define N_IRQ_SX9500                                IOE_8
-#define IRQ_1_MMA8451                               IOE_9
-#define IRQ_2_MMA8451                               IOE_10
-#define TX_EN_SX9500                                IOE_11
-#define LED_1                                       IOE_12
-#define LED_2                                       IOE_13
-#define LED_3                                       IOE_14
-#define LED_4                                       IOE_15
+//#define IRQ_MPL3115                                 IOE_0 //Not connected
+//#define IRQ_MAG3110                                 IOE_1
+//#define GPS_POWER_ON                                IOE_2
+//#define RADIO_PUSH_BUTTON                           IOE_3
+//#define BOARD_POWER_DOWN                            IOE_4
+//#define SPARE_IO_EXT_5                              IOE_5
+//#define SPARE_IO_EXT_6                              IOE_6
+//#define SPARE_IO_EXT_7                              IOE_7
+//#define N_IRQ_SX9500                                IOE_8
+//#define IRQ_1_MMA8451                               IOE_9
+//#define IRQ_2_MMA8451                               IOE_10
+//#define TX_EN_SX9500                                IOE_11
+#define LED_1                                       PA_5
+//#define LED_2                                       IOE_13
+//#define LED_3                                       IOE_14
+//#define LED_4                                       IOE_15
 
 /*!
  * Board MCU pins definitions
  */
 
-#define RADIO_RESET                                 PB_10
+#define RADIO_RESET                                 PB_6
 
 #define RADIO_MOSI                                  PA_7
 #define RADIO_MISO                                  PA_6
 #define RADIO_SCLK                                  PA_5
-#define RADIO_NSS                                   PA_4
+#define RADIO_NSS                                   PC_7
 
-#define RADIO_DIO_0                                 PB_11
-#define RADIO_DIO_1                                 PC_13
-#define RADIO_DIO_2                                 PB_9
-#define RADIO_DIO_3                                 PB_4
-#define RADIO_DIO_4                                 PB_3
-#define RADIO_DIO_5                                 PA_15
+#define RADIO_DIO_0                                 PA_4
+#define RADIO_DIO_1                                 PC_1
+#define RADIO_DIO_2                                 PC_0
+#define RADIO_DIO_3                                 PC_14
+#define RADIO_DIO_4                                 PC_15
+#define RADIO_DIO_5                                 PB_12
 
-#define RADIO_ANT_SWITCH_HF                         PA_0
-#define RADIO_ANT_SWITCH_LF                         PA_1
+//#define RADIO_ANT_SWITCH_HF                         PA_0 //Not needed on Hope Bords
+//#define RADIO_ANT_SWITCH_LF                         PA_1 //Not needed on Hope Bords
 
 #define OSC_LSE_IN                                  PC_14
 #define OSC_LSE_OUT                                 PC_15
 
-#define OSC_HSE_IN                                  PH_0
-#define OSC_HSE_OUT                                 PH_1
+#define OSC_HSE_IN                                  PD_0
+#define OSC_HSE_OUT                                 PD_1
 
 #define USB_DM                                      PA_11
 #define USB_DP                                      PA_12
 
-#define I2C_SCL                                     PB_6
-#define I2C_SDA                                     PB_7
+#define I2C_SCL                                     PB_8
+#define I2C_SDA                                     PB_9
 
-#define BOOT_1                                      PB_2
+//#define BOOT_1                                      PB_2 //Not avialable
 
-#define GPS_PPS                                     PB_1
-#define UART_TX                                     PA_9
-#define UART_RX                                     PA_10
+//#define GPS_PPS                                     PB_1 //Not connected
+#define UART_TX                                     PA_2
+#define UART_RX                                     PA_3
 
-#define DC_DC_EN                                    PB_8
-#define BAT_LEVEL_PIN                               PB_0
-#define BAT_LEVEL_CHANNEL                           ADC_CHANNEL_8
+//#define DC_DC_EN                                    PB_8 //Not connected
+//#define BAT_LEVEL_PIN                               PB_0 //Not connected
+//#define BAT_LEVEL_CHANNEL                           ADC_CHANNEL_8 //Not connected
 
-#define WKUP1                                       PA_8
-#define USB_ON                                      PA_2
+//#define WKUP1                                       PA_8
+//#define USB_ON                                      PA_2
 
-#define RF_RXTX                                     PA_3
+//#define RF_RXTX                                     PA_3 //Not used on Hope
 
 #define SWDIO                                       PA_13
 #define SWCLK                                       PA_14
 
-#define TEST_POINT1                                 PB_12
-#define TEST_POINT2                                 PB_13
-#define TEST_POINT3                                 PB_14
-#define TEST_POINT4                                 PB_15
+//#define TEST_POINT1                                 PB_12
+//#define TEST_POINT2                                 PB_13
+//#define TEST_POINT3                                 PB_14
+//#define TEST_POINT4                                 PB_15
+//
+//#define PIN_NC                                      PB_5
 
-#define PIN_NC                                      PB_5
 
 /*!
  * LED GPIO pins objects

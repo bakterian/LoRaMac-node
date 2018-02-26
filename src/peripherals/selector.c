@@ -13,8 +13,20 @@ License: Revised BSD License, see LICENSE.TXT file include in the project
 Maintainer: Miguel Luis and Gregory Cristian
 */
 #include "board.h"
-
 #include "selector.h"
+
+#ifndef SEL_1
+#define SEL_1 1
+#endif
+#ifndef SEL_2
+#define SEL_2 2
+#endif
+#ifndef SEL_3
+#define SEL_3 3
+#endif
+#ifndef SEL_4
+#define SEL_4 4
+#endif
 
 uint8_t SelectorGetValue( void )
 {

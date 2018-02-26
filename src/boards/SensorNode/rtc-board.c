@@ -199,14 +199,14 @@ void RtcInit( void )
         __HAL_RCC_RTC_ENABLE( );
 
         RtcHandle.Instance = RTC;
-        RtcHandle.Init.HourFormat = RTC_HOURFORMAT_24;
+        //RtcHandle.Init.HourFormat = RTC_HOURFORMAT_24; //No available on the ST32F103
 
         RtcHandle.Init.AsynchPrediv = 3;
-        RtcHandle.Init.SynchPrediv = 3;
+        //RtcHandle.Init.SynchPrediv = 3; //No available on the ST32F103
 
-        RtcHandle.Init.OutPut = RTC_OUTPUT_DISABLE;
-        RtcHandle.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
-        RtcHandle.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+        RtcHandle.Init.OutPut = RTC_OUTPUTSOURCE_NONE;
+        //RtcHandle.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+        //RtcHandle.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
         HAL_RTC_Init( &RtcHandle );
 
         // Set Date: Friday 1st of January 2000
@@ -220,9 +220,9 @@ void RtcInit( void )
         rtcInit.CalendarTime.Hours = 0;
         rtcInit.CalendarTime.Minutes = 0;
         rtcInit.CalendarTime.Seconds = 0;
-        rtcInit.CalendarTime.TimeFormat = RTC_HOURFORMAT12_AM;
-        rtcInit.CalendarTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-        rtcInit.CalendarTime.StoreOperation = RTC_STOREOPERATION_RESET;
+//        rtcInit.CalendarTime.TimeFormat = RTC_HOURFORMAT12_AM;
+//        rtcInit.CalendarTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+//        rtcInit.CalendarTime.StoreOperation = RTC_STOREOPERATION_RESET;
         HAL_RTC_SetTime( &RtcHandle, &rtcInit.CalendarTime, RTC_FORMAT_BIN );
 
         HAL_NVIC_SetPriority( RTC_Alarm_IRQn, 4, 0 );
@@ -333,10 +333,10 @@ void RtcEnterLowPowerStopMode( void )
         SET_BIT( PWR->CR, PWR_CR_CWUF );
 
         // Enable Ultra low power mode
-        HAL_PWREx_EnableUltraLowPower( );
+        //HAL_PWREx_EnableUltraLowPower( );
 
         // Enable the fast wake up from Ultra low power mode
-        HAL_PWREx_EnableFastWakeUp( );
+        //HAL_PWREx_EnableFastWakeUp( );
 
         // Enter Stop Mode
         HAL_PWR_EnterSTOPMode( PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFI );
@@ -355,8 +355,8 @@ void RtcRecoverMcuStatus( void )
         NonScheduledWakeUp = true;
     }
     // check the clk source and set to full speed if we are coming from sleep mode
-    if( ( __HAL_RCC_GET_SYSCLK_SOURCE( ) == RCC_SYSCLKSOURCE_STATUS_HSI ) ||
-        ( __HAL_RCC_GET_SYSCLK_SOURCE( ) == RCC_SYSCLKSOURCE_STATUS_MSI ) )
+    if( ( __HAL_RCC_GET_SYSCLK_SOURCE( ) == RCC_SYSCLKSOURCE_STATUS_HSI ))
+    		//||( __HAL_RCC_GET_SYSCLK_SOURCE( ) == RCC_SYSCLKSOURCE_STATUS_MSI ) )
     {
         BoardInitMcu( );
     }
@@ -390,7 +390,7 @@ static void RtcStartWakeUpAlarm( uint32_t timeoutValue )
     RTC_AlarmTypeDef alarmStructure;
 
     HAL_RTC_DeactivateAlarm( &RtcHandle, RTC_ALARM_A );
-    HAL_RTCEx_DeactivateWakeUpTimer( &RtcHandle );
+    //HAL_RTCEx_DeactivateWakeUpTimer( &RtcHandle );
 
     // Load the RTC calendar
     now = RtcGetCalendar( );
@@ -402,14 +402,14 @@ static void RtcStartWakeUpAlarm( uint32_t timeoutValue )
     alarmTimer = RtcComputeTimerTimeToAlarmTick( timeoutValue, now );
 
     alarmStructure.Alarm = RTC_ALARM_A;
-    alarmStructure.AlarmDateWeekDaySel = RTC_ALARMDATEWEEKDAYSEL_DATE;
-    alarmStructure.AlarmMask = RTC_ALARMMASK_NONE;
-    alarmStructure.AlarmTime.TimeFormat = RTC_HOURFORMAT12_AM;
+    //alarmStructure.AlarmDateWeekDaySel = RTC_ALARMDATEWEEKDAYSEL_DATE;
+    //alarmStructure.AlarmMask = RTC_ALARMMASK_NONE;
+   //alarmStructure.AlarmTime.TimeFormat = RTC_HOURFORMAT12_AM;
 
     alarmStructure.AlarmTime.Seconds = alarmTimer.CalendarTime.Seconds;
     alarmStructure.AlarmTime.Minutes = alarmTimer.CalendarTime.Minutes;
     alarmStructure.AlarmTime.Hours = alarmTimer.CalendarTime.Hours;
-    alarmStructure.AlarmDateWeekDay = alarmTimer.CalendarDate.Date;
+    //alarmStructure.AlarmDateWeekDay = alarmTimer.CalendarDate.Date;
 
     if( HAL_RTC_SetAlarm_IT( &RtcHandle, &alarmStructure, RTC_FORMAT_BIN ) != HAL_OK )
     {

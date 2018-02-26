@@ -39,8 +39,8 @@ void I2cMcuInit( I2c_t *obj, PinNames scl, PinNames sda )
 
     obj->I2c.Instance  = ( I2C_TypeDef * )I2C1_BASE;
 
-    GpioInit( &obj->Scl, scl, PIN_ALTERNATE_FCT, PIN_OPEN_DRAIN, PIN_NO_PULL, GPIO_AF4_I2C1 );
-    GpioInit( &obj->Sda, sda, PIN_ALTERNATE_FCT, PIN_OPEN_DRAIN, PIN_NO_PULL, GPIO_AF4_I2C1 );
+    GpioInit( &obj->Scl, scl, PIN_ALTERNATE_FCT, PIN_OPEN_DRAIN, PIN_NO_PULL, 1 );
+    GpioInit( &obj->Sda, sda, PIN_ALTERNATE_FCT, PIN_OPEN_DRAIN, PIN_NO_PULL, 1 );
 }
 
 void I2cMcuFormat( I2c_t *obj, I2cMode mode, I2cDutyCycle dutyCycle, bool I2cAckEnable, I2cAckAddrMode AckAddrMode, uint32_t I2cFrequency )
@@ -63,8 +63,8 @@ void I2cMcuFormat( I2c_t *obj, I2cMode mode, I2cDutyCycle dutyCycle, bool I2cAck
     obj->I2c.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
     obj->I2c.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
     obj->I2c.Init.OwnAddress2 = 0;
-    obj->I2c.Init.GeneralCallMode = I2C_GENERALCALL_DISABLED;
-    obj->I2c.Init.NoStretchMode = I2C_NOSTRETCH_DISABLED;
+    obj->I2c.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+    obj->I2c.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
 
     i2c = &obj->I2c;
     HAL_I2C_Init( i2c );

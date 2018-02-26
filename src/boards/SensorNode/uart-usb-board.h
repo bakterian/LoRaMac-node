@@ -22,7 +22,7 @@ Maintainer: Miguel Luis and Gregory Cristian
  * \param [IN] tx   UART Tx pin name to be used
  * \param [IN] rx   UART Rx pin name to be used
  */
-void UartUsbInit( Uart_t *obj, uint8_t uartId, PinNames tx, PinNames rx );
+//void UartUsbInit( Uart_t *obj, uint8_t uartId, PinNames tx, PinNames rx );
 
 /*!
  * \brief Initializes the UART object and USB peripheral
@@ -35,21 +35,21 @@ void UartUsbInit( Uart_t *obj, uint8_t uartId, PinNames tx, PinNames rx );
  * \param [IN] parity       packet parity
  * \param [IN] flowCtrl     UART flow control
  */
-void UartUsbConfig( Uart_t *obj, UartMode_t mode, uint32_t baudrate, WordLength_t wordLength, StopBits_t stopBits, Parity_t parity, FlowCtrl_t flowCtrl );
+//void UartUsbConfig( Uart_t *obj, UartMode_t mode, uint32_t baudrate, WordLength_t wordLength, StopBits_t stopBits, Parity_t parity, FlowCtrl_t flowCtrl );
 
 /*!
  * \brief DeInitializes the UART object and USB peripheral
  *
  * \param [IN] obj  UART object
  */
-void UartUsbDeInit( Uart_t *obj );
+//void UartUsbDeInit( Uart_t *obj );
 
 /*!
  * \brief Checks if the cable is connected or not
  *
  * \retval connected [0: Not connected, 1: Connected]
  */
-uint8_t UartUsbIsUsbCableConnected( void );
+//uint8_t UartUsbIsUsbCableConnected( void );
 
 /*!
  * \brief Sends a buffer to the UART
@@ -59,7 +59,7 @@ uint8_t UartUsbIsUsbCableConnected( void );
  * \param [IN] size   Buffer size
  * \retval status     [0: OK, 1: Busy, 2: Fail]
  */
-uint8_t UartUsbPutBuffer( Uart_t *obj, uint8_t *buffer, uint16_t size );
+//uint8_t UartUsbPutBuffer( Uart_t *obj, uint8_t *buffer, uint16_t size );
 
 /*!
  * \brief Sends a character to the UART
@@ -68,7 +68,7 @@ uint8_t UartUsbPutBuffer( Uart_t *obj, uint8_t *buffer, uint16_t size );
  * \param [IN] data  Character to be sent
  * \retval status    [0: OK, 1: Busy, 2: Fail]
  */
-uint8_t UartUsbPutChar( Uart_t *obj, uint8_t data );
+//uint8_t UartUsbPutChar( Uart_t *obj, uint8_t data );
 
 /*!
  * \brief Gets a character from the UART
@@ -77,6 +77,6 @@ uint8_t UartUsbPutChar( Uart_t *obj, uint8_t data );
  * \param [IN] data  Received character
  * \retval status    [0: OK, 1: Busy, 2: Fail]
  */
-uint8_t UartUsbGetChar( Uart_t *obj, uint8_t *data );
+//uint8_t UartUsbGetChar( Uart_t *obj, uint8_t *data );
 
 #endif // __UART_USB_H__
