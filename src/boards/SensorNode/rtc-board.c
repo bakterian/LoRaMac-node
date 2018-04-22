@@ -17,10 +17,11 @@ Maintainer: Miguel Luis and Gregory Cristian
 #include "rtc-board.h"
 
 /*!
- * RTC Time base in ms
+ * RTC Time base in ms (RTC time is passing 2048 times faster than in reality)
  */
 #define RTC_ALARM_TICK_DURATION                     0.48828125      // 1 tick every 488us
 #define RTC_ALARM_TICK_PER_MS                       2.048           // 1/2.048 = tick duration in ms
+
 
 /*!
  * Maximum number of days that can be handled by the RTC alarm counter before overflow.
@@ -192,38 +193,20 @@ static void RtcCheckCalendarRollOver( uint8_t year );
 
 void RtcInit( void )
 {
-    RtcCalendar_t rtcInit;
-
     if( RtcInitialized == false )
     {
         __HAL_RCC_RTC_ENABLE( );
 
         RtcHandle.Instance = RTC;
-        //RtcHandle.Init.HourFormat = RTC_HOURFORMAT_24; //No available on the ST32F103
-
-        RtcHandle.Init.AsynchPrediv = 3;
-        //RtcHandle.Init.SynchPrediv = 3; //No available on the ST32F103
-
+        RtcHandle.State = HAL_RTC_STATE_RESET;
+        RtcHandle.Init.AsynchPrediv = 16 - 1;
         RtcHandle.Init.OutPut = RTC_OUTPUTSOURCE_NONE;
-        //RtcHandle.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
-        //RtcHandle.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
-        HAL_RTC_Init( &RtcHandle );
 
-        // Set Date: Friday 1st of January 2000
-        rtcInit.CalendarDate.Year = 0;
-        rtcInit.CalendarDate.Month = 1;
-        rtcInit.CalendarDate.Date = 1;
-        rtcInit.CalendarDate.WeekDay = RTC_WEEKDAY_SATURDAY;
-        HAL_RTC_SetDate( &RtcHandle, &rtcInit.CalendarDate, RTC_FORMAT_BIN );
-
-        // Set Time: 00:00:00
-        rtcInit.CalendarTime.Hours = 0;
-        rtcInit.CalendarTime.Minutes = 0;
-        rtcInit.CalendarTime.Seconds = 0;
-//        rtcInit.CalendarTime.TimeFormat = RTC_HOURFORMAT12_AM;
-//        rtcInit.CalendarTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-//        rtcInit.CalendarTime.StoreOperation = RTC_STOREOPERATION_RESET;
-        HAL_RTC_SetTime( &RtcHandle, &rtcInit.CalendarTime, RTC_FORMAT_BIN );
+        HAL_StatusTypeDef initResult = HAL_RTC_Init( &RtcHandle );
+        if(initResult !=  HAL_OK)
+        {
+        	 assert_param( FAIL );
+        }
 
         HAL_NVIC_SetPriority( RTC_Alarm_IRQn, 4, 0 );
         HAL_NVIC_EnableIRQ( RTC_Alarm_IRQn );

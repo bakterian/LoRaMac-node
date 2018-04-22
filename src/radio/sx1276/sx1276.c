@@ -227,6 +227,8 @@ void SX1276Init( RadioEvents_t *events )
 
     SX1276Reset( );
 
+    Sx1276SanityCheck();
+
     RxChainCalibration( );
 
     SX1276SetOpMode( RF_OPMODE_SLEEP );
@@ -630,7 +632,7 @@ void SX1276SetTxConfig( RadioModems_t modem, int8_t power, uint32_t fdev,
             if( ( ( bandwidth == 7 ) && ( ( datarate == 11 ) || ( datarate == 12 ) ) ) ||
                 ( ( bandwidth == 8 ) && ( datarate == 12 ) ) )
             {
-                SX1276.Settings.LoRa.LowDatarateOptimize = 0x01;
+            	SX1276.Settings.LoRa.LowDatarateOptimize = 0x00; //XXX: Turned off optimization to comply with RPI2 settings
             }
             else
             {
@@ -1167,6 +1169,12 @@ int16_t SX1276ReadRssi( RadioModems_t modem )
     return rssi;
 }
 
+void Sx1276SanityCheck()
+{
+    uint8_t v = ReadRegister(REG_VERSION);
+    assert_param(v == 0x12 );
+}
+
 void SX1276Reset( void )
 {
     // Set RESET pin to 0
@@ -1191,7 +1199,9 @@ void SX1276SetOpMode( uint8_t opMode )
     else
     {
         SX1276SetAntSwLowPower( false );
+		#ifndef HOPE_RF_BOARD
         SX1276SetAntSw( opMode );
+		#endif
     }
     SX1276Write( REG_OPMODE, ( SX1276Read( REG_OPMODE ) & RF_OPMODE_MASK ) | opMode );
 }
@@ -1243,6 +1253,24 @@ uint8_t SX1276Read( uint8_t addr )
     uint8_t data;
     SX1276ReadBuffer( addr, &data, 1 );
     return data;
+}
+
+uint16_t ReadRegister(uint8_t address)
+{
+    uint16_t value = 0;
+    GPIOA->BRR = GPIO_PIN_4; //NSS = 0;
+
+    while( (SPI2->SR & SPI_SR_TXE ) == 0);
+    SPI2->DR = (address & 0x7F);
+	while( (SPI2->SR & SPI_SR_RXNE ) == 0);
+	value = SPI2->DR;
+    while( (SPI2->SR & SPI_SR_TXE ) == 0);
+    SPI2->DR = 0;
+	while( (SPI2->SR & SPI_SR_RXNE ) == 0);
+	value = SPI2->DR;
+
+    GPIOA->BSRR = GPIO_PIN_4; //NSS = 1;
+    return value;
 }
 
 void SX1276WriteBuffer( uint8_t addr, uint8_t *buffer, uint8_t size )

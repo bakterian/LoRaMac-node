@@ -22,8 +22,6 @@ Maintainer: Miguel Luis and Gregory Cristian
 #include <stdint.h>
 #include "stm32f1xx.h"
 #include "stm32f1xx_hal.h"
-//#include "stm32l1xx.h"
-//#include "stm32l1xx_hal.h"
 #include "utilities.h"
 #include "timer.h"
 #include "delay.h"
@@ -43,6 +41,8 @@ Maintainer: Miguel Luis and Gregory Cristian
 #include "rtc-board.h"
 #include "sx1276-board.h"
 #include "uart-board.h"
+#include "dwt_stm32_delay.h"
+#include "dht22.h"
 
 #if defined( USE_USB_CDC )
 #include "uart-usb-board.h"
@@ -50,8 +50,8 @@ Maintainer: Miguel Luis and Gregory Cristian
 
 /*!
  * Define indicating if an external IO expander is to be used
- */
-#define BOARD_IOE_EXT
+ */ // A external IO expander is not connected
+//#define BOARD_IOE_EXT
 
 /*!
  * Generic definition
@@ -64,46 +64,36 @@ Maintainer: Miguel Luis and Gregory Cristian
 #define FAIL                                        0
 #endif
 
-/*!
- * Board IO Extender pins definitions
- */
-//#define IRQ_MPL3115                                 IOE_0 //Not connected
-//#define IRQ_MAG3110                                 IOE_1
-//#define GPS_POWER_ON                                IOE_2
-//#define RADIO_PUSH_BUTTON                           IOE_3
-//#define BOARD_POWER_DOWN                            IOE_4
-//#define SPARE_IO_EXT_5                              IOE_5
-//#define SPARE_IO_EXT_6                              IOE_6
-//#define SPARE_IO_EXT_7                              IOE_7
-//#define N_IRQ_SX9500                                IOE_8
-//#define IRQ_1_MMA8451                               IOE_9
-//#define IRQ_2_MMA8451                               IOE_10
-//#define TX_EN_SX9500                                IOE_11
-#define LED_1                                       PA_5
-//#define LED_2                                       IOE_13
-//#define LED_3                                       IOE_14
-//#define LED_4                                       IOE_15
 
 /*!
  * Board MCU pins definitions
+ * ALWAYS VERIFY IF PIN IS NOT ALREADY USED ON NUCLEO BOARD
  */
 
 #define RADIO_RESET                                 PB_6
 
-#define RADIO_MOSI                                  PA_7
-#define RADIO_MISO                                  PA_6
-#define RADIO_SCLK                                  PA_5
-#define RADIO_NSS                                   PC_7
+#define RADIO_MOSI                                  PB_15
+#define RADIO_MISO                                  PB_14
+#define RADIO_SCLK                                  PB_13
+#define RADIO_NSS                                   PA_4
 
-#define RADIO_DIO_0                                 PA_4
+#define RADIO_DIO_0                                 PB_5
 #define RADIO_DIO_1                                 PC_1
 #define RADIO_DIO_2                                 PC_0
-#define RADIO_DIO_3                                 PC_14
-#define RADIO_DIO_4                                 PC_15
+#define RADIO_DIO_3                                 PC_2
+#define RADIO_DIO_4                                 PC_3
 #define RADIO_DIO_5                                 PB_12
 
-//#define RADIO_ANT_SWITCH_HF                         PA_0 //Not needed on Hope Bords
-//#define RADIO_ANT_SWITCH_LF                         PA_1 //Not needed on Hope Bords
+#define DHT22_IO_IN									PB_7
+#define LED_1                                       PA_5
+#define DHT22_IO_OUT								PA_1
+
+
+/*!
+ * Board MCU pins which are unavailable (at least without nucleo reworks)
+ */
+
+#define NUCLEO_USER_BUTTON							PC_13
 
 #define OSC_LSE_IN                                  PC_14
 #define OSC_LSE_OUT                                 PC_15
@@ -117,30 +107,18 @@ Maintainer: Miguel Luis and Gregory Cristian
 #define I2C_SCL                                     PB_8
 #define I2C_SDA                                     PB_9
 
-//#define BOOT_1                                      PB_2 //Not avialable
-
-//#define GPS_PPS                                     PB_1 //Not connected
 #define UART_TX                                     PA_2
 #define UART_RX                                     PA_3
 
-//#define DC_DC_EN                                    PB_8 //Not connected
-//#define BAT_LEVEL_PIN                               PB_0 //Not connected
-//#define BAT_LEVEL_CHANNEL                           ADC_CHANNEL_8 //Not connected
-
-//#define WKUP1                                       PA_8
-//#define USB_ON                                      PA_2
-
-//#define RF_RXTX                                     PA_3 //Not used on Hope
+#define UART3_TX                                    PC_10
+#define UART3_RX                                    PC_11
 
 #define SWDIO                                       PA_13
 #define SWCLK                                       PA_14
 
-//#define TEST_POINT1                                 PB_12
-//#define TEST_POINT2                                 PB_13
-//#define TEST_POINT3                                 PB_14
-//#define TEST_POINT4                                 PB_15
-//
-//#define PIN_NC                                      PB_5
+#define JNTRST										PB_4
+#define JTDO										PB_3
+#define JTDI										PA_15
 
 
 /*!
@@ -155,10 +133,16 @@ extern Gpio_t Led4;
  * MCU objects
  */
 extern I2c_t I2c;
-extern Uart_t Uart1;
+extern Uart_t Uart2;
 #if defined( USE_USB_CDC )
 extern Uart_t UartUsb;
 #endif
+
+/*!
+ * DHT22 GPIO pins objects
+ */
+extern Gpio_t InDht22GPIO;
+extern Gpio_t OutDht22GPIO;
 
 /*!
  * Possible power sources

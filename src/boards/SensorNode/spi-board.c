@@ -25,7 +25,7 @@ typedef enum
     SPI_2 = ( uint32_t )SPI2_BASE,
 }SPIName;
 
-void SpiInit( Spi_t *obj, PinNames mosi, PinNames miso, PinNames sclk, PinNames nss )
+void SpiInit( Spi_t *obj, PinNames mosi, PinNames miso, PinNames sclk, PinNames nss, FlagStatus useSoftNss)
 {
     BoardDisableIrq( );
 
@@ -34,53 +34,47 @@ void SpiInit( Spi_t *obj, PinNames mosi, PinNames miso, PinNames sclk, PinNames 
     {
         __HAL_RCC_SPI1_FORCE_RESET( );
         __HAL_RCC_SPI1_RELEASE_RESET( );
-
         __HAL_RCC_SPI1_CLK_ENABLE( );
 
-        obj->Spi.Instance = ( SPI_TypeDef* )SPI1_BASE;
+        obj->Spi.Instance = ( SPI_TypeDef* )SPI_1;
 
-        GpioInit( &obj->Mosi, mosi, PIN_ALTERNATE_FCT, PIN_PUSH_PULL, PIN_PULL_DOWN, 1 );
-        GpioInit( &obj->Miso, miso, PIN_ALTERNATE_FCT, PIN_PUSH_PULL, PIN_PULL_DOWN, 1 );
-        GpioInit( &obj->Sclk, sclk, PIN_ALTERNATE_FCT, PIN_PUSH_PULL, PIN_PULL_DOWN, 1 );
-        GpioInit( &obj->Nss, nss, PIN_ALTERNATE_FCT, PIN_PUSH_PULL, PIN_PULL_UP, 1 );
-
-        if( nss == NC )
-        {
-            obj->Spi.Init.NSS = SPI_NSS_SOFT;
-            SpiFormat( obj, SPI_DATASIZE_8BIT, SPI_POLARITY_LOW, SPI_PHASE_1EDGE, 0 );
-        }
-        else
-        {
-            SpiFormat( obj, SPI_DATASIZE_8BIT, SPI_POLARITY_LOW, SPI_PHASE_1EDGE, 1 );
-        }
     }
     else if( mosi == PB_15 )
     {
         __HAL_RCC_SPI2_FORCE_RESET( );
         __HAL_RCC_SPI2_RELEASE_RESET( );
-
         __HAL_RCC_SPI2_CLK_ENABLE( );
 
-        obj->Spi.Instance = ( SPI_TypeDef* )SPI2_BASE;
-
-        GpioInit( &obj->Mosi, mosi, PIN_ALTERNATE_FCT, PIN_PUSH_PULL, PIN_PULL_DOWN, 1 );
-        GpioInit( &obj->Miso, miso, PIN_ALTERNATE_FCT, PIN_PUSH_PULL, PIN_PULL_DOWN, 1 );
-        GpioInit( &obj->Sclk, sclk, PIN_ALTERNATE_FCT, PIN_PUSH_PULL, PIN_PULL_DOWN, 1 );
-        GpioInit( &obj->Nss, nss, PIN_ALTERNATE_FCT, PIN_PUSH_PULL, PIN_PULL_UP, 1 );
-
-        if( nss == NC )
-        {
-            obj->Spi.Init.NSS = SPI_NSS_SOFT;
-            SpiFormat( obj, SPI_DATASIZE_8BIT, SPI_POLARITY_LOW, SPI_PHASE_1EDGE, 0 );
-        }
-        else
-        {
-            SpiFormat( obj, SPI_DATASIZE_8BIT, SPI_POLARITY_LOW, SPI_PHASE_1EDGE, 1 );
-        }
+        obj->Spi.Instance = ( SPI_TypeDef* )SPI_2;
     }
+
+    GpioInit( &obj->Sclk, sclk, PIN_ALTERNATE_FCT, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
+    GpioInit( &obj->Miso, miso, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
+    GpioInit( &obj->Mosi, mosi, PIN_ALTERNATE_FCT, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
+
+    if(useSoftNss == SET)
+    {
+        GpioInit( &obj->Nss, nss, PIN_OUTPUT, PIN_PUSH_PULL, PIN_PULL_UP, 1 );
+        obj->Spi.Init.NSS = SPI_NSS_SOFT;
+        SpiFormat( obj, SPI_DATASIZE_8BIT, SPI_POLARITY_LOW, SPI_PHASE_1EDGE, 0 );
+    }
+    else
+    {
+        obj->Spi.Init.NSS = SPI_NSS_HARD_OUTPUT;
+    	GpioInit( &obj->Nss, nss, PIN_ALTERNATE_FCT, PIN_PUSH_PULL, PIN_PULL_UP, 1 );
+        GpioWrite( &SX1276.Spi.Nss, 1 );
+        SpiFormat( obj, SPI_DATASIZE_8BIT, SPI_POLARITY_LOW, SPI_PHASE_1EDGE, 0 );
+    }
+
+    //obj->Spi.Init.BaudRatePrescaler = SPI_CR1_BR_1;
+
     SpiFrequency( obj, 10000000 );
 
-    HAL_SPI_Init( &obj->Spi );
+	HAL_StatusTypeDef status = HAL_SPI_Init( &obj->Spi );
+
+	assert_param(status == HAL_OK);
+
+	__HAL_SPI_ENABLE(&obj->Spi );
 
     BoardEnableIrq( );
 }
@@ -112,6 +106,7 @@ void SpiFormat( Spi_t *obj, int8_t bits, int8_t cpol, int8_t cpha, int8_t slave 
     obj->Spi.Init.TIMode = SPI_TIMODE_DISABLE;
     obj->Spi.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
     obj->Spi.Init.CRCPolynomial = 7;
+
 
     if( slave == 0 )
     {
@@ -145,9 +140,34 @@ void SpiFrequency( Spi_t *obj, uint32_t hz )
               ( ( ( divisor & 0x1 ) == 0 ) ? 0x0 : SPI_CR1_BR_0 );
 
     obj->Spi.Init.BaudRatePrescaler = baudRate;
+
 }
 
 uint16_t SpiInOut( Spi_t *obj, uint16_t outData )
+{
+    uint8_t rxData = 0;
+
+    if( ( obj == NULL ) || ( obj->Spi.Instance ) == NULL )
+    {
+        assert_param( FAIL );
+    }
+
+    __HAL_SPI_ENABLE( &obj->Spi );
+
+    BoardDisableIrq( );
+
+    while( __HAL_SPI_GET_FLAG( &obj->Spi, SPI_FLAG_TXE ) == RESET );
+    obj->Spi.Instance->DR = ( uint16_t ) ( outData & 0xFF );
+
+    while( __HAL_SPI_GET_FLAG( &obj->Spi, SPI_FLAG_RXNE ) == RESET );
+    rxData = ( uint16_t ) obj->Spi.Instance->DR;
+
+    BoardEnableIrq( );
+
+    return( rxData );
+}
+
+uint16_t SpiReadREg( Spi_t *obj, uint16_t outData )
 {
     uint8_t rxData = 0;
 

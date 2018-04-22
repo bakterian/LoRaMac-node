@@ -79,20 +79,12 @@ static uint8_t *LoRaMacAppKey;
 /*!
  * AES encryption/decryption cipher network session key
  */
-static uint8_t LoRaMacNwkSKey[] =
-{
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
+static uint8_t LoRaMacNwkSKey[] = { 0xDA, 0x84, 0xF3, 0x1F, 0x5F, 0x0B, 0xBD, 0x09, 0x3F, 0x11, 0x46, 0xA8, 0xA5, 0x0E, 0xF7, 0x24 };
 
 /*!
  * AES encryption/decryption cipher application session key
  */
-static uint8_t LoRaMacAppSKey[] =
-{
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
+static uint8_t LoRaMacAppSKey[] = { 0xDA, 0x84, 0xF3, 0x1F, 0x5F, 0x0B, 0xBD, 0x09, 0x3F, 0x11, 0x46, 0xA8, 0xA5, 0x0E, 0xF7, 0x24 };
 
 /*!
  * Device nonce is a random value extracted by issuing a sequence of RSSI
@@ -1112,6 +1104,7 @@ static void OnRadioRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t
 
 static void OnRadioTxTimeout( void )
 {
+	printf("Radio Tx Timeout.\r\n");
     if( LoRaMacDeviceClass != CLASS_C )
     {
         Radio.Sleep( );
@@ -1128,6 +1121,7 @@ static void OnRadioTxTimeout( void )
 
 static void OnRadioRxError( void )
 {
+	printf("Radio Rx Error.\r\n");
     if( LoRaMacDeviceClass != CLASS_C )
     {
         Radio.Sleep( );
@@ -1163,6 +1157,7 @@ static void OnRadioRxError( void )
 
 static void OnRadioRxTimeout( void )
 {
+	printf("Radio Rx Timeout.\r\n");
     if( LoRaMacDeviceClass != CLASS_C )
     {
         Radio.Sleep( );
@@ -3282,7 +3277,7 @@ LoRaMacStatus_t LoRaMacMcpsRequest( McpsReq_t *mcpsRequest )
     // Apply the minimum possible datarate.
     // Some regions have limitations for the minimum datarate.
     datarate = MAX( datarate, phyParam.Value );
-
+    LoRaMacParams.ChannelsDatarate  = datarate;
     if( readyToSend == true )
     {
         if( AdrCtrlOn == false )

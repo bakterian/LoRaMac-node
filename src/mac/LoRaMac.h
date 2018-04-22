@@ -84,7 +84,7 @@
 
 /*!
  * Check the Mac layer state every MAC_STATE_CHECK_TIMEOUT in ms
- */
+ */ //XXX If the duty cycle is not applied this is re-join delay
 #define MAC_STATE_CHECK_TIMEOUT                     1000
 
 /*!

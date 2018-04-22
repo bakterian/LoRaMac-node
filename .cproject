@@ -26,6 +26,8 @@
 								<option id="gnu.c.compiler.option.debugging.level.207824197" name="Debug Level" superClass="gnu.c.compiler.option.debugging.level" useByScannerDiscovery="false" value="gnu.c.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.269910322" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32"/>
+									<listOptionValue builtIn="false" value="HOPE_RF_BOARD"/>
+									<listOptionValue builtIn="false" value="USE_FULL_ASSERT"/>
 									<listOptionValue builtIn="false" value="USE_MODEM_LORA"/>
 									<listOptionValue builtIn="false" value="REGION_EU868"/>
 									<listOptionValue builtIn="false" value="STM32F1"/>
@@ -98,7 +100,7 @@
 					</folderInfo>
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="inc"/>
-						<entry excluding="boards/mcu/stm32/STM32F1xx_HAL_Driver|boards/mcu/stm32/HAL_Driver" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+						<entry excluding="apps/rx-sensi/SensorNode/main.c|apps/tx-cw/SensorNode/main.c|boards/mcu/stm32/STM32F1xx_HAL_Driver|boards/mcu/stm32/HAL_Driver" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="src"/>
 						<entry excluding="Src/stm32f1xx_hal_timebase_tim_template.c|Src/stm32f1xx_hal_timebase_rtc_wakeup_template.c|Src/stm32f1xx_hal_timebase_rtc_alarm_template.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src/boards/mcu/stm32/STM32F1xx_HAL_Driver"/>
 					</sourceEntries>
 				</configuration>
@@ -267,7 +269,7 @@
 					</folderInfo>
 					<sourceEntries>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="inc"/>
-						<entry excluding="boards/mcu/stm32/STM32F1xx_HAL_Driver|boards/mcu/stm32/HAL_Driver" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
+						<entry excluding="apps/LoRaMac/classA/SensorNode/main.c|apps/rx-sensi/SensorNode/main.c|apps/tx-cw/SensorNode/main.c|boards/mcu/stm32/STM32F1xx_HAL_Driver|boards/mcu/stm32/HAL_Driver" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 						<entry excluding="Src/stm32f1xx_hal_timebase_tim_template.c|Src/stm32f1xx_hal_timebase_rtc_wakeup_template.c|Src/stm32f1xx_hal_timebase_rtc_alarm_template.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src/boards/mcu/stm32/STM32F1xx_HAL_Driver"/>
 					</sourceEntries>
 				</configuration>

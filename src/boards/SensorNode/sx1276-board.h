@@ -35,11 +35,11 @@ Maintainer: Miguel Luis and Gregory Cristian
     { MODEM_FSK , REG_PACKETCONFIG1      , 0xD8 },\
     { MODEM_FSK , REG_FIFOTHRESH         , 0x8F },\
     { MODEM_FSK , REG_IMAGECAL           , 0x02 },\
-    { MODEM_FSK , REG_DIOMAPPING1        , 0x00 },\
+    { MODEM_FSK , REG_DIOMAPPING1        , 0x40 },\
     { MODEM_FSK , REG_DIOMAPPING2        , 0x30 },\
     { MODEM_LORA, REG_LR_PAYLOADMAXLENGTH, 0x40 },\
 }                                                 \
-
+//Found bug in dio mapping settings
 #define RF_MID_BAND_THRESH                          525000000
 
 /*!

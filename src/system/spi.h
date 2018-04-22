@@ -33,8 +33,9 @@ typedef struct Spi_s Spi_t;
  * \param [IN] miso SPI MISO pin name to be used
  * \param [IN] sclk SPI SCLK pin name to be used
  * \param [IN] nss  SPI NSS pin name to be used
+ * \param [IN] useSoftNss Flag to determine if software nss used
  */
-void SpiInit( Spi_t *obj, PinNames mosi, PinNames miso, PinNames sclk, PinNames nss );
+void SpiInit( Spi_t *obj, PinNames mosi, PinNames miso, PinNames sclk, PinNames nss, FlagStatus useSoftNss);
 
 /*!
  * \brief De-initializes the SPI object and MCU peripheral

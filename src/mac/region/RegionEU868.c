@@ -62,6 +62,12 @@ static uint16_t ChannelsMask[CHANNELS_MASK_SIZE];
  */
 static uint16_t ChannelsDefaultMask[CHANNELS_MASK_SIZE];
 
+/*!
+ * Last added channel id.
+ * When FreqHoping is off this will be the only setting used.
+ */
+static uint8_t LastAddedChannelId;
+
 // Static functions
 static int8_t GetNextLowerTxDr( int8_t dr, int8_t minDr )
 {
@@ -375,7 +381,7 @@ bool RegionEU868Verify( VerifyParams_t* verify, PhyAttribute_t phyAttribute )
         }
         case PHY_DEF_TX_DR:
         {
-            return RegionCommonValueInRange( verify->DatarateParams.Datarate, DR_0, DR_5 );
+            return RegionCommonValueInRange( verify->DatarateParams.Datarate, EU868_TX_MIN_DATARATE, DR_6 );
         }
         case PHY_RX_DR:
         {
@@ -942,8 +948,8 @@ bool RegionEU868NextChannel( NextChanParams_t* nextChanParams, uint8_t* channel,
     if( nbEnabledChannels > 0 )
     {
         // We found a valid channel
-        *channel = enabledChannels[randr( 0, nbEnabledChannels - 1 )];
-
+        //*channel = enabledChannels[randr( 0, nbEnabledChannels - 1 )]; //XXX Working in single channel mode therefore channel swictching is turned off.
+        *channel = LastAddedChannelId; // MK channel setting 0 used for transmission
         *time = 0;
         return true;
     }
@@ -1031,6 +1037,7 @@ LoRaMacStatus_t RegionEU868ChannelAdd( ChannelAddParams_t* channelAdd )
         return LORAMAC_STATUS_FREQUENCY_INVALID;
     }
 
+    LastAddedChannelId = id;
     memcpy( &(Channels[id]), channelAdd->NewChannel, sizeof( Channels[id] ) );
     Channels[id].Band = band;
     ChannelsMask[0] |= ( 1 << id );

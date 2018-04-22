@@ -237,6 +237,7 @@
  */
 #define EU868_LC3                                   { 868500000, 0, { ( ( DR_5 << 4 ) | DR_0 ) }, 1 }
 
+
 /*!
  * LoRaMac channels which are allowed for the join procedure
  */

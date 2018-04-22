@@ -113,6 +113,10 @@
 #define VECT_TAB_OFFSET  0x0 /*!< Vector Table base offset field. 
                                   This value must be a multiple of 0x200. */
 
+#define PLL_SOURCE_HSE            // HSE (8MHz) used to clock the PLL, and the PLL is used as system clock source
+#ifndef RCC_CFGR_PLLSRC_HSE
+ #define  RCC_CFGR_PLLSRC_HSE                ((uint32_t)0x00010000)        /*!< HSE clock selected as PLL entry clock source */
+#endif
 
 /**
   * @}
@@ -136,7 +140,7 @@
 #if defined(STM32F100xB) ||defined(STM32F100xE)
   uint32_t SystemCoreClock         = 24000000;        /*!< System Clock Frequency (Core Clock) */
 #else /*!< HSI Selected as System Clock source */
-  uint32_t SystemCoreClock         = 72000000;        /*!< System Clock Frequency (Core Clock) */
+  uint32_t SystemCoreClock         = 32000000;        /*!< System Clock Frequency (Core Clock) */
 #endif
 
 const uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
@@ -169,6 +173,97 @@ const uint8_t APBPrescTable[8] =  {0, 0, 0, 0, 1, 2, 3, 4};
 /** @addtogroup STM32F1xx_System_Private_Functions
   * @{
   */
+
+
+
+  /**
+    * @brief  Sets System clock frequency to 72MHz and configure HCLK, PCLK2
+    *         and PCLK1 prescalers.
+    * @note   This function should be used only after reset.
+    * @param  None
+    * @retval None
+    */
+  static void SetSysClock(void)
+  {
+   #ifdef PLL_SOURCE_HSI
+    /* At this stage the HSI is already enabled */
+
+    /*  PLL configuration: PLLCLK = HSI/2 * 16 = 64 MHz */
+    RCC->CFGR &= (uint32_t)((uint32_t)~(RCC_CFGR_PLLSRC | RCC_CFGR_PLLMULL));
+    RCC->CFGR |= (uint32_t)(((uint32_t)0x00000000) | RCC_CFGR_PLLMULL16);
+
+   #else /* PLL_SOURCE_HSE_BYPASS or PLL_SOURCE_HSE */
+    __IO uint32_t StartUpCounter = 0, HSEStatus = 0;
+    /* Enable HSE */
+    RCC->CR |= ((uint32_t)RCC_CR_HSEON);
+  #ifdef PLL_SOURCE_HSE_BYPASS
+    RCC->CR |= ((uint32_t)RCC_CR_HSEBYP);
+  #endif   /* PLL_SOURCE_HSE_BYPASS */
+
+    /* Wait till HSE is ready and if Time out is reached exit */
+    do
+    {
+      HSEStatus = RCC->CR & RCC_CR_HSERDY;
+      StartUpCounter++;
+    } while((HSEStatus == 0) && (StartUpCounter != HSE_STARTUP_TIMEOUT));
+
+    if ((RCC->CR & RCC_CR_HSERDY) != RESET)
+    {
+      HSEStatus = (uint32_t)0x01;
+    }
+    else
+    {
+      HSEStatus = (uint32_t)0x00;
+    }
+
+    if (HSEStatus == (uint32_t)0x01)
+    {
+      /*  PLL configuration: PLLCLK = HSE * 9 = 72 MHz */
+      RCC->CFGR &= (uint32_t)((uint32_t)~(RCC_CFGR_PLLSRC | RCC_CFGR_PLLXTPRE |
+                                          RCC_CFGR_PLLMULL));
+      RCC->CFGR |= (uint32_t)(RCC_CFGR_PLLSRC_HSE | RCC_CFGR_PLLMULL9);
+    }
+    else
+    { /* If HSE fails to start-up, the application will have wrong clock
+      configuration. User can add here some code to deal with this error */
+    }
+
+  #endif /*PLL_SOURCE_HSI*/
+
+      /* Enable Prefetch Buffer */
+      FLASH->ACR |= FLASH_ACR_PRFTBE;
+
+      /* Flash 2 wait state */
+      FLASH->ACR &= (uint32_t)((uint32_t)~FLASH_ACR_LATENCY);
+      FLASH->ACR |= (uint32_t)FLASH_ACR_LATENCY_2;
+
+
+      /* HCLK = SYSCLK */
+      RCC->CFGR |= (uint32_t)RCC_CFGR_HPRE_DIV1;
+
+      /* PCLK2 = HCLK */
+      RCC->CFGR |= (uint32_t)RCC_CFGR_PPRE2_DIV1;
+
+      /* PCLK1 = HCLK */
+      RCC->CFGR |= (uint32_t)RCC_CFGR_PPRE1_DIV2;
+
+      /* Enable PLL */
+      RCC->CR |= RCC_CR_PLLON;
+
+      /* Wait till PLL is ready */
+      while((RCC->CR & RCC_CR_PLLRDY) == 0)
+      {
+      }
+
+      /* Select PLL as system clock source */
+      RCC->CFGR &= (uint32_t)((uint32_t)~(RCC_CFGR_SW));
+      RCC->CFGR |= (uint32_t)RCC_CFGR_SW_PLL;
+
+      /* Wait till PLL is used as system clock source */
+      while ((RCC->CFGR & (uint32_t)RCC_CFGR_SWS) != (uint32_t)0x08)
+      {
+      }
+    }
 
 /**
   * @brief  Setup the microcontroller system
@@ -233,6 +328,8 @@ void SystemInit (void)
 #endif 
 
   SCB->CCR |= 0x10; //MK: enable div-by-0 trap
+
+  //SetSysClock();
 }
 
 /**

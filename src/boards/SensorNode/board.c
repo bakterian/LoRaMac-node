@@ -13,7 +13,7 @@ License: Revised BSD License, see LICENSE.TXT file include in the project
 Maintainer: Miguel Luis and Gregory Cristian
 */
 #include "board.h"
-
+#include "stdio.h"
 /*!
  * Unique Devices IDs register set ( STM32L1xxx )
  */
@@ -31,15 +31,26 @@ Gpio_t Led4;
 
 Gpio_t UsbDetect;
 
+#define FIFO_TX_SIZE_USART2                              	128
+#define FIFO_RX_SIZE_USART2                                 128
+uint8_t TxBufferUsart2[FIFO_TX_SIZE_USART2];
+uint8_t RxBufferUsart2[FIFO_RX_SIZE_USART2];
+
 /*
  * MCU objects
  */
 Adc_t Adc;
 I2c_t I2c;
-Uart_t Uart1;
+Uart_t Uart2;
 #if defined( USE_USB_CDC )
 Uart_t UartUsb;
 #endif
+
+/*!
+ * DHT22 GPIO pins objects
+ */
+Gpio_t				InDht22GPIO;
+Gpio_t				OutDht22GPIO;
 
 /*!
  * Initializes the unused GPIO to a know status
@@ -108,47 +119,12 @@ void BoardEnableIrq( void )
 
 void BoardInitPeriph( void )
 {
-    //Gpio_t ioPin;
-
-    // Init the GPIO pins. The Peripherials will not be connected
-//    GpioInit( &ioPin, DC_DC_EN, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
-//    GpioInit( &ioPin, IRQ_MPL3115, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
-//    GpioInit( &ioPin, IRQ_MAG3110, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
-//    GpioInit( &ioPin, GPS_POWER_ON, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
-//    GpioInit( &ioPin, RADIO_PUSH_BUTTON, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
-//    GpioInit( &ioPin, BOARD_POWER_DOWN, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
-//    GpioInit( &ioPin, SPARE_IO_EXT_5, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
-//    GpioInit( &ioPin, SPARE_IO_EXT_6, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
-//    GpioInit( &ioPin, SPARE_IO_EXT_7, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
-//    GpioInit( &ioPin, N_IRQ_SX9500, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
-//    GpioInit( &ioPin, IRQ_1_MMA8451, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
-//    GpioInit( &ioPin, IRQ_2_MMA8451, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
-//    GpioInit( &ioPin, TX_EN_SX9500, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 1 );
-    GpioInit( &Led1, LED_1, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
-//    GpioInit( &Led2, LED_2, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
-//    GpioInit( &Led3, LED_3, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
-//    GpioInit( &Led4, LED_4, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
-
-    // Init temperature, pressure and altitude sensor
-    //MPL3115Init( );
-
-    // Init accelerometer
-    //MMA8451Init( );
-
-    // Init magnetometer
-    //MAG3110Init( );
-
-    // Init SAR
-    //SX9500Init( );
-
-    // Init GPS
-    //GpsInit( );
-
-    // Switch LED 1, 2, 3, 4 OFF
-    GpioWrite( &Led1, 1 );
-    //GpioWrite( &Led2, 1 );
-    //GpioWrite( &Led3, 1 );
-    //GpioWrite( &Led4, 1 );
+    //Init the temperature and humiditdy sensor
+     InitDht22(&InDht22GPIO,DHT22_IO_IN);
+     InitDht22(&OutDht22GPIO, DHT22_IO_OUT);
+     //Switch LED 1, 2, 3, 4 OFF
+     GpioInit( &Led1, LED_1, PIN_OUTPUT, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
+     GpioWrite( &Led1, 0 );
 }
 
 void BoardInitMcu( void )
@@ -163,29 +139,34 @@ void BoardInitMcu( void )
 
         SystemClockConfig( );
 
+        SystemCoreClockUpdate();
+
+        assert_param(SystemCoreClock == 32000000);
+
 #if defined( USE_USB_CDC )
         UartInit( &UartUsb, UART_USB_CDC, NC, NC );
         UartConfig( &UartUsb, RX_TX, 115200, UART_8_BIT, UART_1_STOP_BIT, NO_PARITY, NO_FLOW_CTRL );
-
         DelayMs( 1000 ); // 1000 ms for Usb initialization
+#else
+        FifoInit( &Uart2.FifoRx, RxBufferUsart2, FIFO_RX_SIZE_USART2 );
+        FifoInit( &Uart2.FifoTx, TxBufferUsart2, FIFO_TX_SIZE_USART2 );
+        UartInit( &Uart2, UART_2, UART_TX, UART_RX );
+        UartConfig( &Uart2, RX_TX, 115200, UART_8_BIT, UART_1_STOP_BIT, NO_PARITY, NO_FLOW_CTRL );
 #endif
 
-        RtcInit( );
-
-        BoardUnusedIoInit( );
-
-        I2cInit( &I2c, I2C_SCL, I2C_SDA );
-
-        //GpioInit( &UsbDetect, USB_ON, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 0 ); //Not used for now
+        //BoardUnusedIoInit( );
+        //I2cInit( &I2c, I2C_SCL, I2C_SDA ); //I2C is used only for sensor, none are connected
     }
     else
     {
         SystemClockReConfig( );
     }
 
-    //AdcInit( &Adc, BAT_LEVEL_PIN ); //No battery will be attached for now
+    uint32_t dwtInitErrors = DWT_Delay_Init();
+    assert_param(dwtInitErrors == 0);
 
-    SpiInit( &SX1276.Spi, RADIO_MOSI, RADIO_MISO, RADIO_SCLK, NC );
+    //AdcInit( &Adc, BAT_LEVEL_PIN ); //No battery will be attached for now
+    SpiInit( &SX1276.Spi, RADIO_MOSI, RADIO_MISO, RADIO_SCLK, RADIO_NSS, SET );
     SX1276IoInit( );
 
     if( McuInitialized == false )
@@ -212,8 +193,6 @@ void BoardDeInitMcu( void )
 
     GpioInit( &ioPin, OSC_LSE_IN, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
     GpioInit( &ioPin, OSC_LSE_OUT, PIN_INPUT, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
-
-    //GpioInit( &UsbDetect, USB_ON, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
 }
 
 uint32_t BoardGetRandomSeed( void )
@@ -325,17 +304,6 @@ static void BoardUnusedIoInit( void )
         GpioInit( &ioPin, USB_DP, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
     }
 
-//    GpioInit( &ioPin, TEST_POINT1, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
-//    GpioInit( &ioPin, TEST_POINT2, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
-//    GpioInit( &ioPin, TEST_POINT3, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
-//    GpioInit( &ioPin, TEST_POINT4, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
-//
-//    GpioInit( &ioPin, PIN_NC, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
-//    GpioInit( &ioPin, BOOT_1, PIN_ANALOGIC, PIN_OPEN_DRAIN, PIN_NO_PULL, 0 );
-//
-//    GpioInit( &ioPin, RF_RXTX, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
-//    GpioInit( &ioPin, WKUP1, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
-
 #if defined( USE_DEBUGGER )
     HAL_DBGMCU_EnableDBGStopMode( );
     HAL_DBGMCU_EnableDBGSleepMode( );
@@ -351,7 +319,7 @@ static void BoardUnusedIoInit( void )
 }
 
 void SystemClockConfig( void )
-{ //TODO Verify sys clock setting, makes sure that proper sysTick is used
+{
     RCC_OscInitTypeDef RCC_OscInitStruct;
     RCC_ClkInitTypeDef RCC_ClkInitStruct;
     RCC_PeriphCLKInitTypeDef PeriphClkInit;
@@ -365,8 +333,10 @@ void SystemClockConfig( void )
     RCC_OscInitStruct.LSEState = RCC_LSE_ON;
     RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
     RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-    RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL8;
-    //RCC_OscInitStruct.PLL.PLLDIV = RCC_PLL_DIV3; //PLL divider not supported
+    RCC_OscInitStruct.PLL.PLLMUL  = RCC_PLL_MUL4; //Setting FOSC = 8 * 4 = 32
+    RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
+    //RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL8; //A system tick equal to 32 MHz was used ib the original implementation
+    //RCC_OscInitStruct.PLL.PLLDIV = RCC_PLL_DIV3; //PLL divider not supported, Orignaly this was FOSC = (12 * 8)/3 = 32
     if( HAL_RCC_OscConfig( &RCC_OscInitStruct ) != HAL_OK )
     {
         assert_param( FAIL );
@@ -383,12 +353,31 @@ void SystemClockConfig( void )
         assert_param( FAIL );
     }
 
+    // Enable access to Backup domain
+    HAL_PWR_EnableBkUpAccess();
+
+    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSE;
+    RCC_OscInitStruct.PLL.PLLState   = RCC_PLL_NONE; // Mandatory, otherwise the PLL is reconfigured!
+    RCC_OscInitStruct.LSEState       = RCC_LSE_ON;
+    RCC_OscInitStruct.LSIState       = RCC_LSI_OFF;
+
+    if (HAL_RCC_OscConfig(&RCC_OscInitStruct) == HAL_OK) {
+        //__HAL_RCC_RTC_CLKPRESCALER(RCC_RTCCLKSOURCE_LSE);
+        __HAL_RCC_RTC_CONFIG(RCC_RTCCLKSOURCE_LSE);
+    }
+    else
+    {
+    	assert_param( FAIL );
+    }
+
     PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC;
     PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
-    if( HAL_RCCEx_PeriphCLKConfig( &PeriphClkInit ) != HAL_OK )
+    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
     {
-        assert_param( FAIL );
+    	 assert_param( FAIL );
     }
+
+    RtcInit( );
 
     HAL_SYSTICK_Config( HAL_RCC_GetHCLKFreq( ) / 1000 );
 
@@ -463,8 +452,20 @@ uint8_t GetBoardPowerSource( void )
         return USB_POWER;
     }
 #else
-    return BATTERY_POWER;
+    return USB_POWER;
 #endif
+}
+
+#ifdef __GNUC__
+/* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
+   set to 'Yes') calls __io_putchar() */
+int __io_putchar( int c )
+#else /* __GNUC__ */
+int fputc( int c, FILE *stream )
+#endif
+{
+    while( UartMcuPutChar( &Uart2, c ) != 0 );
+    return c;
 }
 
 #ifdef USE_FULL_ASSERT
@@ -482,7 +483,7 @@ void assert_failed( uint8_t* file, uint32_t line )
     /* User can add his own implementation to report the file name and line number,
      ex: printf("Wrong parameters value: file %s on line %u\r\n", file, line) */
 
-    printf( "Wrong parameters value: file %s on line %u\r\n", ( const char* )file, line );
+    printf( "Wrong parameters value. %s, line %lu\r\n", ( const char* )file, line );
     /* Infinite loop */
     while( 1 )
     {

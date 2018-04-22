@@ -42,7 +42,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 
 #elif defined( REGION_EU868 )
 
-#define RF_FREQUENCY                                868000000 // Hz
+#define RF_FREQUENCY                                868300000 // Hz
 
 #elif defined( REGION_KR920 )
 
@@ -66,11 +66,11 @@ Maintainer: Miguel Luis and Gregory Cristian
 
 #if defined( USE_MODEM_LORA )
 
-#define LORA_BANDWIDTH                              0         // [0: 125 kHz,
+#define LORA_BANDWIDTH                              1         // [0: 125 kHz,
                                                               //  1: 250 kHz,
                                                               //  2: 500 kHz,
                                                               //  3: Reserved]
-#define LORA_SPREADING_FACTOR                       10        // [SF7..SF12]
+#define LORA_SPREADING_FACTOR                       7        // [SF7..SF12]
 #define LORA_CODINGRATE                             1         // [1: 4/5,
                                                               //  2: 4/6,
                                                               //  3: 4/7,
@@ -111,6 +111,8 @@ int main( void )
     BoardInitMcu( );
     BoardInitPeriph( );
 
+    printf("Board initialization done.\r\n");
+
     // Radio initialization
     RadioEvents.RxDone = OnRxDone;
 
@@ -150,4 +152,5 @@ void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
     // Toggle LED 1
     ledState ^= 1;
     GpioWrite( &Led1, ledState );
+    printf("Something was received %s",payload);
 }

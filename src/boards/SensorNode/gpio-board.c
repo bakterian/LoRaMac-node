@@ -58,7 +58,7 @@ void GpioMcuInit( Gpio_t *obj, PinNames pin, PinModes mode, PinConfigs config, P
 
     GPIO_InitStructure.Pin =  obj->pinIndex ;
     GPIO_InitStructure.Pull = obj->pull = type;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_MEDIUM; // changed to medium speed because of osc = 32 MHz GPIO_SPEED_FREQ_HIGH;
 
     if( mode == PIN_INPUT )
     {

@@ -24,9 +24,10 @@ void UartMcuInit( Uart_t *obj, uint8_t uartId, PinNames tx, PinNames rx )
 {
     obj->UartId = uartId;
 
-    __HAL_RCC_USART1_FORCE_RESET( );
-    __HAL_RCC_USART1_RELEASE_RESET( );
-    __HAL_RCC_USART1_CLK_ENABLE( );
+    __HAL_RCC_AFIO_CLK_ENABLE();
+    __HAL_RCC_USART2_FORCE_RESET( );
+    __HAL_RCC_USART2_RELEASE_RESET( );
+    __HAL_RCC_USART2_CLK_ENABLE( );
 
     GpioInit( &obj->Tx, tx, PIN_ALTERNATE_FCT, PIN_PUSH_PULL, PIN_PULL_UP, 1 );
     GpioInit( &obj->Rx, rx, PIN_ALTERNATE_FCT, PIN_PUSH_PULL, PIN_PULL_UP, 1 );
@@ -34,7 +35,7 @@ void UartMcuInit( Uart_t *obj, uint8_t uartId, PinNames tx, PinNames rx )
 
 void UartMcuConfig( Uart_t *obj, UartMode_t mode, uint32_t baudrate, WordLength_t wordLength, StopBits_t stopBits, Parity_t parity, FlowCtrl_t flowCtrl )
 {
-    UartHandle.Instance = USART1;
+    UartHandle.Instance = USART2;
     UartHandle.Init.BaudRate = baudrate;
 
     if( mode == TX_ONLY )
@@ -123,18 +124,20 @@ void UartMcuConfig( Uart_t *obj, UartMode_t mode, uint32_t baudrate, WordLength_
         assert_param( FAIL );
     }
 
-    HAL_NVIC_SetPriority( USART1_IRQn, 8, 0 );
-    HAL_NVIC_EnableIRQ( USART1_IRQn );
+    HAL_NVIC_SetPriority( USART2_IRQn, 8, 0 );
+    HAL_NVIC_EnableIRQ( USART2_IRQn );
 
     /* Enable the UART Data Register not empty Interrupt */
-    HAL_UART_Receive_IT( &UartHandle, &RxData, 1 );
+    HAL_StatusTypeDef status = HAL_UART_Receive_IT( &UartHandle, &RxData, 1 );
+
+    assert_param(status == HAL_OK);
 }
 
 void UartMcuDeInit( Uart_t *obj )
 {
-    __HAL_RCC_USART1_FORCE_RESET( );
-    __HAL_RCC_USART1_RELEASE_RESET( );
-    __HAL_RCC_USART1_CLK_DISABLE( );
+    __HAL_RCC_USART2_FORCE_RESET( );
+    __HAL_RCC_USART2_RELEASE_RESET( );
+    __HAL_RCC_USART2_CLK_DISABLE( );
 
     GpioInit( &obj->Tx, obj->Tx.pin, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
     GpioInit( &obj->Rx, obj->Rx.pin, PIN_ANALOGIC, PIN_PUSH_PULL, PIN_NO_PULL, 0 );
@@ -175,30 +178,30 @@ uint8_t UartMcuGetChar( Uart_t *obj, uint8_t *data )
 
 void HAL_UART_TxCpltCallback( UART_HandleTypeDef *handle )
 {
-    if( IsFifoEmpty( &Uart1.FifoTx ) == false )
+    if( IsFifoEmpty( &Uart2.FifoTx ) == false )
     {
-        TxData = FifoPop( &Uart1.FifoTx );
+        TxData = FifoPop( &Uart2.FifoTx );
         //  Write one byte to the transmit data register
         HAL_UART_Transmit_IT( &UartHandle, &TxData, 1 );
     }
 
-    if( Uart1.IrqNotify != NULL )
+    if( Uart2.IrqNotify != NULL )
     {
-        Uart1.IrqNotify( UART_NOTIFY_TX );
+        Uart2.IrqNotify( UART_NOTIFY_TX );
     }
 }
 
 void HAL_UART_RxCpltCallback( UART_HandleTypeDef *handle )
 {
-    if( IsFifoFull( &Uart1.FifoRx ) == false )
+    if( IsFifoFull( &Uart2.FifoRx ) == false )
     {
         // Read one byte from the receive data register
-        FifoPush( &Uart1.FifoRx, RxData );
+        FifoPush( &Uart2.FifoRx, RxData );
     }
 
-    if( Uart1.IrqNotify != NULL )
+    if( Uart2.IrqNotify != NULL )
     {
-        Uart1.IrqNotify( UART_NOTIFY_RX );
+        Uart2.IrqNotify( UART_NOTIFY_RX );
     }
 
     HAL_UART_Receive_IT( &UartHandle, &RxData, 1 );
@@ -209,7 +212,7 @@ void HAL_UART_ErrorCallback( UART_HandleTypeDef *handle )
     HAL_UART_Receive_IT( &UartHandle, &RxData, 1 );
 }
 
-void USART1_IRQHandler( void )
+void USART2_IRQHandler( void )
 {
     HAL_UART_IRQHandler( &UartHandle );
 }

@@ -20,7 +20,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 
 #include "gpio-board.h"
 
-#if defined( BOARD_IOE_EXT )
+#if defined(BOARD_IOE_EXT)
 #include "gpio-ioe.h"
 #endif
 
@@ -32,7 +32,7 @@ void GpioInit( Gpio_t *obj, PinNames pin, PinModes mode,  PinConfigs config, Pin
     }
     else
     {
-#if defined( BOARD_IOE_EXT )
+#if defined(BOARD_IOE_EXT)
         // IOExt Pin
         GpioIoeInit( obj, pin, mode, config, type, value );
 #endif

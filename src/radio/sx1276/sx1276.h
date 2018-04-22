@@ -403,4 +403,11 @@ void SX1276SetMaxPayloadLength( RadioModems_t modem, uint8_t max );
  */
 void SX1276SetPublicNetwork( bool enable );
 
+/*!
+ * \brief Performs a sanity check and verifies if chip version read back using SPI is equal to the expected value.
+ */
+void Sx1276SanityCheck();
+
+uint16_t ReadRegister(uint8_t address);
+
 #endif // __SX1276_H__

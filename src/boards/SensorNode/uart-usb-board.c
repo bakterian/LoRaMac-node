@@ -105,6 +105,6 @@ Maintainer: Miguel Luis and Gregory Cristian
 //int fputc( int c, FILE *stream )
 //#endif
 //{
-//    while( UartUsbPutChar( &UartUsb, c ) != 0 );
+//    while( UartUsbPutChar( &Usart2, c ) != 0 );
 //    return c;
 //}
